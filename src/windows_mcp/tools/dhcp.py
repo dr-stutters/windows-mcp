@@ -15,8 +15,13 @@ def register(mcp: FastMCP, client: WindowsClient) -> None:
     async def win_list_dhcp_scopes() -> str:
         """List IPv4 DHCP scopes."""
         return dumps(await client.run_ps_json(
-            "Get-DhcpServerv4Scope | Select-Object ScopeId, Name, State, "
-            "StartRange, EndRange, SubnetMask, LeaseDuration"))
+            "Get-DhcpServerv4Scope | Select-Object "
+            "@{n='ScopeId';e={$_.ScopeId.IPAddressToString}}, Name, "
+            "@{n='State';e={$_.State.ToString()}}, "
+            "@{n='StartRange';e={$_.StartRange.IPAddressToString}}, "
+            "@{n='EndRange';e={$_.EndRange.IPAddressToString}}, "
+            "@{n='SubnetMask';e={$_.SubnetMask.IPAddressToString}}, "
+            "@{n='LeaseDuration';e={$_.LeaseDuration.ToString()}}"))
 
     @mcp.tool()
     async def win_create_dhcp_scope(name: str, start_range: str, end_range: str,

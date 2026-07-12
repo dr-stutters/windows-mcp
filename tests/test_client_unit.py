@@ -133,7 +133,8 @@ def test_get_ca_certificate_script():
     fake = FakeClient(ps="-----BEGIN CERTIFICATE-----\nMII...\n-----END CERTIFICATE-----")
     out = run(_call(_mcp(fake), "win_get_ca_certificate"))
     _, script = fake.calls[-1]
-    assert "certutil -ca.cert" in script and "BEGIN CERTIFICATE" in out
+    assert "Cert:\\LocalMachine" in script and "ToBase64String" in script
+    assert "BEGIN CERTIFICATE" in out
 
 
 def test_promote_to_dc_script():

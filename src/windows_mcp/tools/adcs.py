@@ -50,14 +50,18 @@ def register(mcp: FastMCP, client: WindowsClient) -> None:
         """Export the CA's own certificate as PEM.
 
         Feed the returned PEM straight into the ISE MCP's ise_import_trusted_cert
-        so ISE trusts certs this CA issues (EAP-TLS, pxGrid, portals)."""
+        so ISE trusts certs this CA issues (EAP-TLS, pxGrid, portals). Reads the
+        cert from the machine store (matched to the configured CA name)."""
         return dumps(await client.run_ps(
-            "$tmp = [System.IO.Path]::GetTempFileName(); "
-            "certutil -ca.cert $tmp | Out-Null; "
-            "$der = [System.IO.File]::ReadAllBytes($tmp); "
-            "Remove-Item $tmp -Force; "
+            "$name = (Get-ItemProperty "
+            "'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\CertSvc\\Configuration' "
+            "-Name Active -ErrorAction SilentlyContinue).Active; "
+            "$ca = Get-ChildItem Cert:\\LocalMachine\\CA, Cert:\\LocalMachine\\Root | "
+            "Where-Object { $_.Subject -match ('CN=' + [regex]::Escape($name)) } | "
+            "Sort-Object NotAfter -Descending | Select-Object -First 1; "
+            "if (-not $ca) { throw 'CA certificate not found in the machine store' }; "
             "\"-----BEGIN CERTIFICATE-----`n\" + "
-            "[System.Convert]::ToBase64String($der, 'InsertLineBreaks') + "
+            "[System.Convert]::ToBase64String($ca.RawData, 'InsertLineBreaks') + "
             "\"`n-----END CERTIFICATE-----\""))
 
     @mcp.tool()

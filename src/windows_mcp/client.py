@@ -32,10 +32,14 @@ class WindowsClient:
 
     def _client(self) -> Client:
         s = self.settings
+        # read_timeout is how long to wait for a WinRM HTTP response; the default
+        # (30s) is too short for a busy server (e.g. mid AD-DS/CA install or a
+        # slow NTLM negotiation), so use the configured timeout for both.
         return Client(
             s.host, username=s.username, password=s.password, ssl=s.ssl,
             port=s.port, auth=s.auth, cert_validation=s.cert_validation,
-            connection_timeout=s.timeout)
+            connection_timeout=s.timeout, read_timeout=s.timeout,
+            operation_timeout=max(20, s.timeout - 10))
 
     # ------------------------------------------------------------------
     # PowerShell
