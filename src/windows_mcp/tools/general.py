@@ -76,6 +76,20 @@ def register(mcp: FastMCP, client: WindowsClient) -> None:
             f"(Get-Service -Name {_L(name)}).Status"))
 
     @mcp.tool()
+    async def win_rename_computer(new_name: str, restart: bool = True) -> str:
+        """Rename the computer (e.g. to 'AD01').
+
+        Do this BEFORE promoting to a domain controller - renaming a DC afterward
+        is far more involved. On a workgroup box no credentials are needed; for a
+        domain-joined machine, rename via win_run_powershell with -DomainCredential.
+        With restart=True (default) it reboots to apply the name, so WinRM drops -
+        reconnect once it's back, then proceed with the role install + promotion.
+        """
+        rs = " -Restart -Force" if restart else " -Force"
+        return dumps(await client.run_ps(
+            f"Rename-Computer -NewName {_L(new_name)}{rs}; 'rename issued'"))
+
+    @mcp.tool()
     async def win_reboot() -> str:
         """Reboot the Windows Server (WinRM drops until it comes back up)."""
         return dumps(await client.run_ps("Restart-Computer -Force; 'reboot issued'"))

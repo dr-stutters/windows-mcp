@@ -137,6 +137,13 @@ def test_get_ca_certificate_script():
     assert "BEGIN CERTIFICATE" in out
 
 
+def test_rename_computer_script():
+    fake = FakeClient()
+    run(_call(_mcp(fake), "win_rename_computer", new_name="AD01"))
+    _, script = fake.calls[-1]
+    assert "Rename-Computer -NewName 'AD01'" in script and "-Restart" in script
+
+
 def test_promote_to_dc_script():
     fake = FakeClient()
     run(_call(_mcp(fake), "win_promote_to_dc", domain_name="lab.local",

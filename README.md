@@ -10,12 +10,12 @@ where the **windows-engineer** agent drives its `mcp__windows__*` tools.
 
 ## What it does
 
-Everything runs PowerShell (or `cmd`) on the server over WinRM. **36 tools** in
+Everything runs PowerShell (or `cmd`) on the server over WinRM. **37 tools** in
 five groups, plus escape hatches:
 
 - **general** — `win_run_powershell` / `win_run_powershell_json` / `win_run_command`
   (escape hatches), `win_system_info`, features (`win_list_features`,
-  `win_install_feature`), services, `win_reboot`
+  `win_install_feature`), services, `win_rename_computer`, `win_reboot`
 - **AD DS** — `win_ad_domain_info`, `win_promote_to_dc` (Install-ADDSForest),
   users (list/get/create/set-password/delete), groups (list/create/add-member),
   OUs, computers
@@ -76,8 +76,12 @@ push).
 
 ## Notes & roadmap
 
+- **Rename the box first.** Run `win_rename_computer('AD01')` (reboots) *before*
+  promoting to a DC — renaming a domain controller afterward is far more involved.
 - `win_promote_to_dc` and role installs **reboot** the server — WinRM drops;
-  reconnect and re-check (`win_ad_domain_info`) once it's back.
+  reconnect and re-check (`win_ad_domain_info`) once it's back. While a box is
+  mid-promotion/pre-reboot, neither the local nor domain Administrator can
+  WinRM-auth — let it reboot, then log in as `DOMAIN\Administrator`.
 - Enterprise AD CS operations need the account to be an Enterprise/Domain Admin.
 - Roadmap: computer domain-join automation, GPO helpers, Kerberos-auth verified
   end to end, and a full ISE↔AD↔CA integration test.
