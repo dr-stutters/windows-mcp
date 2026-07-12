@@ -64,7 +64,9 @@ def register(mcp: FastMCP, client: WindowsClient) -> None:
         """Get a Windows service's status by name."""
         return dumps(await client.run_ps_json(
             f"Get-Service -Name {_L(name)} | "
-            "Select-Object Name, DisplayName, Status, StartType"))
+            "Select-Object Name, DisplayName, "
+            "@{n='Status';e={$_.Status.ToString()}}, "
+            "@{n='StartType';e={$_.StartType.ToString()}}"))
 
     @mcp.tool()
     async def win_restart_service(name: str) -> str:

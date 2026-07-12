@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import logging
 
 from mcp.server.fastmcp import FastMCP
 
 from .client import WindowsClient
 from .config import load_settings
 from .tools import register_all
+
+# pypsrp logs WinRM runspace open/close at INFO on stderr - quiet the noise.
+logging.getLogger("pypsrp").setLevel(logging.WARNING)
 
 
 def build_server() -> FastMCP:
