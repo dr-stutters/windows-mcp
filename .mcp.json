@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "windows": {
+      "command": "uv",
+      "args": ["run", "windows-mcp"]
+    }
+  }
+}
