@@ -77,6 +77,9 @@ def register(mcp: FastMCP, client: WindowsClient) -> None:
 
         Pairs with the ISE MCP: ise_generate_csr -> win_sign_csr -> import/bind on
         ISE. Requires the CA to auto-issue for `template` (or manual approval).
+        Targets the host's default CA via `certutil`, passing an explicit
+        `-config` so `certreq` never opens the interactive CA picker (which
+        would hang forever over WinRM).
 
         Args:
             csr_pem: the certificate signing request in PEM.
@@ -86,6 +89,7 @@ def register(mcp: FastMCP, client: WindowsClient) -> None:
             "$req = [System.IO.Path]::GetTempFileName() + '.req'; "
             "$cer = [System.IO.Path]::GetTempFileName() + '.cer'; "
             f"Set-Content -Path $req -Value @'\n{csr_pem}\n'@ -Encoding ascii; "
-            f"certreq -submit -attrib {_L('CertificateTemplate:' + template)} $req $cer | Out-Null; "
+            "$cfg = ((certutil | Select-String 'Config:').ToString() -split '\"')[1]; "
+            f"certreq -submit -config $cfg -attrib {_L('CertificateTemplate:' + template)} $req $cer | Out-Null; "
             "$out = Get-Content -Path $cer -Raw; "
             "Remove-Item $req,$cer -Force -ErrorAction SilentlyContinue; $out"))
