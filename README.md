@@ -47,7 +47,14 @@ Enable-PSRemoting -Force
 HTTP (5985) with NTLM auth is fine for a lab (message-level encrypted). HTTPS
 (5986) needs a WinRM listener cert.
 
-## Configuration
+## Install
+
+```bash
+git clone https://github.com/dr-stutters/windows-mcp
+cd windows-mcp && uv sync
+```
+
+## Configure
 
 Copy `.env.example` to `.env` (gitignored) and set:
 
@@ -62,17 +69,43 @@ WINRM_CERT_VALIDATION=false
 WINRM_TIMEOUT=120          # seconds (AD/CA installs are slow)
 ```
 
-## Run & test
+## How to use this
+
+Run standalone (stdio): `uv run windows-mcp` — or register it in any MCP client:
+
+```json
+{ "mcpServers": { "windows": { "command": "uv",
+    "args": ["run", "--directory", "/path/to/windows-mcp", "windows-mcp"] } } }
+```
+
+It's built to be driven by an AI agent. In the
+[cml-mcp](https://github.com/dr-stutters/cml-mcp) lab suite it's wired in as the
+`windows` server, owned by the **windows-engineer** agent (tool prefix
+`mcp__windows__*`) — AD/DNS/DHCP/PKI work in lab requests fans out to it
+automatically as the identity backing for ISE. Standalone, just describe what
+you want:
+
+> "Promote this box to a DC for mitchcloud.lab, then create an OU and ten users."
+
+> "Stand up an enterprise CA and give me its cert as PEM."
+
+> "Sign this CSR with the WebServer template."
+
+Start with `win_system_info` to confirm WinRM answers; `win_run_powershell` is
+the escape hatch when no dedicated tool fits.
+
+## Test
 
 ```bash
-uv run windows-mcp                    # stdio transport (for MCP clients)
-uv run pytest                         # unit tests - no Windows box needed
-uv run python tests/smoke_test.py     # read-only live check (needs WinRM up)
+uv run pytest                              # unit tests - no Windows box needed
+uv run python tests/smoke_test.py          # read-only live check (needs WinRM up)
+uv run python tests/integration_test.py    # full live pass (creates + removes objects)
 ```
 
 The unit tests fake the PowerShell layer, so they verify the generated PowerShell,
 JSON parsing and quoting with no live box (`ruff` + `pytest` run in CI on every
-push).
+push). The integration suite has passed 34/34 functional tools against a live
+domain controller.
 
 ## Notes & roadmap
 
@@ -96,3 +129,10 @@ push).
   does both.
 - Roadmap: computer domain-join automation, GPO helpers, Kerberos-auth verified
   end to end, and a bundled supply-in-request clientAuth template.
+
+## Security notes
+
+`.env` is gitignored — never commit credentials. The tools run arbitrary
+PowerShell as the configured account: use a dedicated admin, not a shared one.
+NTLM over HTTP (5985) is message-level encrypted and fine for a lab; production
+should use HTTPS (5986) with a listener cert or Kerberos.
