@@ -76,9 +76,11 @@ push).
 
 ## Notes & roadmap
 
-- **Live-built:** the `mitchcloud.lab` domain — DC, DNS, a DHCP scope, and an AD CS
-  enterprise CA — was stood up and is operated entirely through these tools; it's the
-  identity/PKI/DNS backing for the ISE NAC work.
+- **Live-built + integrated:** the `mitchcloud.lab` domain — DC, DNS, a DHCP scope,
+  and an AD CS enterprise CA — was stood up and is operated entirely through these
+  tools. The full **ISE↔AD↔CA** flow is validated end-to-end: ISE joined to the
+  domain, **PEAP-MSCHAPv2** against AD, and **EAP-TLS** with a `win_sign_csr`-issued
+  client cert (both 802.1X methods passing through a cat9000v to ISE).
 - **Rename the box first.** Run `win_rename_computer('AD01')` (reboots) *before*
   promoting to a DC — renaming a domain controller afterward is far more involved.
 - `win_promote_to_dc` and role installs **reboot** the server — WinRM drops;
@@ -86,5 +88,11 @@ push).
   mid-promotion/pre-reboot, neither the local nor domain Administrator can
   WinRM-auth — let it reboot, then log in as `DOMAIN\Administrator`.
 - Enterprise AD CS operations need the account to be an Enterprise/Domain Admin.
+- **Cert templates set the EKU + subject source.** `win_sign_csr` targets the
+  host's default CA automatically (`certreq -config`). `WebServer` = serverAuth and
+  honours the CSR subject; `User` = clientAuth but builds the subject from the
+  enrolling account. A per-user clientAuth cert (EAP-TLS as a chosen user) needs a
+  custom "supply in the request" + Client Authentication template — no stock one
+  does both.
 - Roadmap: computer domain-join automation, GPO helpers, Kerberos-auth verified
-  end to end, and a full ISE↔AD↔CA integration test.
+  end to end, and a bundled supply-in-request clientAuth template.
