@@ -76,6 +76,9 @@ push).
 
 ## Notes & roadmap
 
+- **Live-built:** the `mitchcloud.lab` domain — DC, DNS, a DHCP scope, and an AD CS
+  enterprise CA — was stood up and is operated entirely through these tools; it's the
+  identity/PKI/DNS backing for the ISE NAC work.
 - **Rename the box first.** Run `win_rename_computer('AD01')` (reboots) *before*
   promoting to a DC — renaming a domain controller afterward is far more involved.
 - `win_promote_to_dc` and role installs **reboot** the server — WinRM drops;
