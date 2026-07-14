@@ -91,6 +91,9 @@ you want:
 
 > "Sign this CSR with the WebServer template."
 
+See **[EXAMPLE_PROMPT.md](EXAMPLE_PROMPT.md)** for a full end-to-end scenario plus
+focused per-area prompts (AD DS, DNS, DHCP, AD CS / PKI-for-ISE).
+
 Start with `win_system_info` to confirm WinRM answers; `win_run_powershell` is
 the escape hatch when no dedicated tool fits.
 
