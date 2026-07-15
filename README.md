@@ -58,6 +58,8 @@ cd windows-mcp && uv sync
 
 Copy `.env.example` to `.env` (gitignored) and set:
 
+> **Suite users:** these values can instead live in a shared `../.env` one level above the repos, read by every companion MCP — precedence: process env > this repo's `.env` > the shared `../.env`. See the [cml-mcp](https://github.com/dr-stutters/cml-mcp) hub.
+
 ```ini
 WINRM_HOST=192.0.2.50
 WINRM_USERNAME=Administrator
