@@ -4,9 +4,10 @@ MCP server for **Windows Server** — Active Directory, DNS, DHCP, and AD
 Certificate Services — driven over **WinRM / PowerShell remoting** ([pypsrp](https://github.com/jborean93/pypsrp)).
 Python 3.11+, [uv](https://docs.astral.sh/uv/), FastMCP.
 
-Sibling to [`cml-mcp`](../CML_MCP), [`firepower-mcp`](../Firepower_MCP) and
-[`ise-mcp`](../ISE_MCP); wired into the CML MCP project as the `windows` server,
-where the **windows-engineer** agent drives its `mcp__windows__*` tools.
+Sibling to [`cml-mcp`](../CML_MCP) and the other suite MCPs ([`firepower-mcp`](../Firepower_MCP),
+[`ise-mcp`](../ISE_MCP), [`splunk-mcp`](../Splunk_MCP), [`wlc-mcp`](../WLC_MCP),
+[`catalyst-center-mcp`](../catalyst-center-mcp)); wired into the CML MCP project as the
+`windows` server, where the **windows-engineer** agent drives its `mcp__windows__*` tools.
 
 ## What it does
 
@@ -24,16 +25,29 @@ five groups, plus escape hatches:
 - **AD CS** — `win_adcs_ca_info`, `win_install_adcs_ca`, `win_get_ca_certificate`
   (PEM export), `win_list_ca_templates`, `win_sign_csr`
 
-## Pairs with the ISE MCP
+## In the suite — the identity / PKI / DNS root
 
-This is the piece that unblocks the deeper ISE scenarios:
+Windows is the enterprise identity, PKI, and DNS backing for the rest of the stack. In the
+[cml-mcp](https://github.com/dr-stutters/cml-mcp) suite these edges are built and validated
+end-to-end (see the [suite integration map](https://github.com/dr-stutters/cml-mcp#suite-integration-map)):
 
-- **AD as an external identity source** — build the domain + users here, then join
-  ISE to AD (`ise_list_active_directory`).
-- **PKI / EAP-TLS** — `win_get_ca_certificate` → `ise_import_trusted_cert`, and
-  `ise_generate_csr` → `win_sign_csr` → import/bind on ISE.
-- **DNS** — resolvable names fix ISE's "non-resolvable CN" CSR requirement.
+- **AD as an external identity source** — build the domain + users/groups here, then join
+  **ISE** ([ise-mcp](https://github.com/dr-stutters/ise-mcp), `ise_list_active_directory`) *and*
+  create an AD **realm on FMC** ([firepower-mcp](https://github.com/dr-stutters/firepower-mcp))
+  so the FTD can match rules on AD users/groups (passive identity).
+- **PKI — one CA (MitchcloudCA) for the whole suite** — `win_get_ca_certificate` +
+  `win_sign_csr` issue enterprise-trusted certs for **ISE** (EAP-TLS/system certs via
+  `ise_generate_csr` → `win_sign_csr` → `ise_import_trusted_cert`), the **FMC pxGrid client
+  cert** (needs a `clientAuth` EKU — temporarily add it to the WebServer template), and switch
+  **TACACS-over-TLS** identity certs.
+- **DNS** — resolvable names fix ISE's "non-resolvable CN" CSR requirement *and* let FMC reach
+  the ISE pxGrid **FQDN**; A/CNAME records added via `win_add_dns_a_record` / `win_add_dns_cname`.
 - **DHCP** — addresses for the endpoints in the auth flow.
+- **Windows → Splunk** ([splunk-mcp](https://github.com/dr-stutters/splunk-mcp)) — AD/security
+  events into the SIEM via the Splunk Add-on for Microsoft Windows.
+
+> Gotcha worth knowing: `certreq.exe` **hangs over WinRM** — issue certs via the CA **COM
+> `ICertRequest`** interface instead (`New-Object -ComObject CertificateAuthority.Request`).
 
 ## Prerequisite: enable WinRM
 
