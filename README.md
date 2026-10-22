@@ -4,6 +4,12 @@ MCP server for **Windows Server** — Active Directory, DNS, DHCP, and AD
 Certificate Services — driven over **WinRM / PowerShell remoting** ([pypsrp](https://github.com/jborean93/pypsrp)).
 Python 3.11+, [uv](https://docs.astral.sh/uv/), FastMCP.
 
+> **Disclaimer.** This is not an official Microsoft product or repository, and it isn't supported or
+> endorsed by Microsoft. It's a personal project by [@dr-stutters](https://github.com/dr-stutters),
+> for lab and learning use only: don't point it at production systems. It's provided as is, with no
+> warranty. Microsoft, Windows Server and Active Directory are trademarks of the Microsoft group of
+> companies.
+
 Sibling to [`cml-mcp`](../CML_MCP) and the other suite MCPs ([`firepower-mcp`](../Firepower_MCP),
 [`ise-mcp`](../ISE_MCP), [`splunk-mcp`](../Splunk_MCP), [`wlc-mcp`](../WLC_MCP),
 [`catalyst-center-mcp`](../catalyst-center-mcp)); wired into the CML MCP project as the
